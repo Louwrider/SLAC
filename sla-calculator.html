@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SLA calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#f4f6fb;--sf:#fff;--tx:#172033;--mu:#6b7488;--ln:#e6e9f1;--ac:#4f46e5;--on:#fff;--brons:#c2762e;--zilver:#7c8ba1;--goud:#d4a017;--brons-t:#9a5714;--zilver-t:#536178;--goud-t:#8a6500;--ok:#1a7f4b;--warn:#b45309;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1320;--sf:#181d2e;--tx:#eef0f7;--mu:#98a0b6;--ln:#272d42;--ac:#8b85ff;--on:#0f1320;--brons:#e0924a;--zilver:#9fb0c8;--goud:#f0c040;--brons-t:#e0924a;--zilver-t:#9fb0c8;--goud-t:#f0c040;--ok:#5fd49a;--warn:#f0b45a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1320;--sf:#181d2e;--tx:#eef0f7;--mu:#98a0b6;--ln:#272d42;--ac:#8b85ff;--on:#0f1320;--brons:#e0924a;--zilver:#9fb0c8;--goud:#f0c040;--brons-t:#e0924a;--zilver-t:#9fb0c8;--goud-t:#f0c040;--ok:#5fd49a;--warn:#f0b45a;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:28px 20px 56px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font-size:22px;font-weight:700;margin:0}
+.seg{display:inline-flex;background:var(--sf);border:1px solid var(--ln);border-radius:12px;padding:3px}
+.seg.fw{display:flex;margin-top:14px}
+.seg button{flex:1;border:0;background:none;color:var(--mu);font:inherit;padding:7px 18px;border-radius:9px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--ac);color:var(--on);font-weight:600}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:24px;align-items:start}
+@media(max-width:900px){.grid{grid-template-columns:1fr}#res{order:-1}}
+.panel{background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:4px 18px 18px}
+.panel h2{font-size:14px;font-weight:700;margin:20px 0 0;padding-bottom:6px;border-bottom:1px solid var(--ln)}
+.panel p{margin:6px 0 0;font-size:12.5px;color:var(--mu)}
+.f{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:9px}
+.f label{color:var(--mu);font-size:14px}
+.in{display:flex;align-items:center;gap:6px;flex:none}
+.in span{color:var(--mu);font-size:12px;min-width:26px}
+input[type=number],input[type=text]{width:84px;padding:6px 8px;border:1px solid var(--ln);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit;text-align:right}
+input[type=text]{width:140px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:1100px){.cards{grid-template-columns:1fr}}
+.card{background:var(--sf);border:1px solid var(--ln);border-top:4px solid var(--c);border-radius:16px;padding:16px 18px 16px}
+.card h3{margin:0;font-size:15px;font-weight:700;color:var(--ct)}
+.price{font-size:32px;font-weight:700;line-height:1.2;margin-top:8px;font-variant-numeric:tabular-nums}
+.price small{font-size:13px;font-weight:400;color:var(--mu)}
+.yr{color:var(--mu);font-size:13px;font-variant-numeric:tabular-nums}
+.ph{font-size:13px;font-weight:700;color:var(--ct);margin-top:18px}
+.ph+.g{margin-top:8px}
+.g{font-size:12.5px;font-weight:600;margin-top:14px;padding-bottom:3px;border-bottom:1px solid var(--ln)}
+.sl{background:var(--bg);border-radius:12px;padding:1px 14px 10px;margin-top:20px}
+.sl .ph{margin-top:12px}
+.ln{display:grid;grid-template-columns:1fr auto 64px;gap:8px;font-size:13px;padding:4px 0;font-variant-numeric:tabular-nums}
+.ln span{text-align:right}.ln span:first-child{text-align:left;color:var(--mu)}
+.ln .u{color:var(--mu);min-width:44px}
+.ln.kv{grid-template-columns:1fr auto}
+.ln.hd{font-size:12px;font-weight:600;padding-top:10px}
+.ln.sub{opacity:.8}.ln.sub span:first-child{padding-left:12px;font-size:12px}
+.ln.sum{border-top:1px solid var(--ln);margin-top:6px;padding-top:8px;font-weight:700}
+.ln.sum span:first-child{color:var(--tx)}
+.note{margin:14px 2px 0;font-size:13px;color:var(--mu)}
+.row2{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.row2 button{border:1px solid var(--ln);background:var(--sf);color:var(--tx);font:inherit;font-size:14px;padding:7px 14px;border-radius:10px;cursor:pointer}
+.row2 button:first-child{background:var(--ac);color:var(--on);border-color:var(--ac);font-weight:600}
+.sumbox{width:100%;margin-top:14px;padding:14px;border:1px solid var(--ln);border-radius:12px;background:var(--sf);color:var(--tx);font:13px/1.55 ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.bench{margin-top:14px;background:var(--sf);border:1px solid var(--ln);border-radius:16px;padding:4px 18px 16px}
+.bench .sm{margin:14px 0 0;font-weight:600}
+.bh{font-size:13px;font-weight:700;margin-top:18px;padding-bottom:3px;border-bottom:1px solid var(--ln)}
+.br{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,1fr) 110px;gap:8px;font-size:13px;padding:5px 0;align-items:baseline}
+.br.hd{color:var(--mu);font-size:12px;font-weight:600;margin-top:10px}
+.br .mu{color:var(--mu)}
+.br .st{text-align:right;font-weight:600;white-space:nowrap}
+.st.ok{color:var(--ok)}.st.lo,.st.hi{color:var(--warn)}.st.na{color:var(--mu);font-weight:400}
+.bf{margin:14px 0 0;font-size:12.5px;color:var(--mu)}
+@media(max-width:560px){.br{grid-template-columns:1fr 1fr}.br .st{text-align:left}}
+.brand{display:flex;align-items:center;gap:12px}
+.tb{display:flex;justify-content:flex-end;margin-bottom:10px}
+.tb button{border:1px solid var(--ln);background:var(--sf);color:var(--tx);font:inherit;font-size:14px;padding:6px 14px;border-radius:10px;cursor:pointer}
+.dl{font-size:12.5px;color:var(--mu);margin-top:2px;min-height:19px}
+input[type=number]{-moz-appearance:textfield;appearance:textfield;font-variant-numeric:tabular-nums}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+@media(min-width:901px){.panel{position:sticky;top:16px;max-height:calc(100vh - 32px);overflow-y:auto}}
+.row2{align-items:center}
+.row2 #reset{border:0;background:none;color:var(--mu);text-decoration:underline;padding:7px 4px;margin-left:auto}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div class="brand"><svg width="40" height="40" viewBox="0 0 40 40" role="img" aria-label="Logo SLA calculator"><rect x="1" y="1" width="38" height="38" rx="11" fill="#172033" stroke="#3a4260" stroke-width="1"/><rect x="9" y="21" width="6" height="10" rx="2" fill="#d98a45"/><rect x="17" y="15" width="6" height="16" rx="2" fill="#aebbd0"/><rect x="25" y="8" width="6" height="23" rx="2" fill="#f0c040"/></svg><h1>SLA calculator</h1></div>
+  <div class="seg" role="group" aria-label="Type SLA">
+    <button id="bi" aria-pressed="false">Intern</button>
+    <button id="be" aria-pressed="true">Extern</button>
+  </div>
+</header>
+<div class="grid">
+  <section class="panel" aria-label="Instellingen">
+    <div class="seg fw" role="group" aria-label="Soort variabelen"><button id="tf" aria-pressed="true">Kosten</button><button id="tk" aria-pressed="false">KPI's</button></div>
+    <div id="inputs"></div>
+  </section>
+  <section id="res" aria-label="Overzicht">
+    <div class="tb"><button id="dt" aria-pressed="false">Toon details</button></div>
+    <div class="cards" id="cards"></div>
+    <p class="note" id="note"></p>
+    <div class="row2"><button id="copy">Maak samenvatting</button><button id="bm">Toets aan benchmark</button><button id="reset">Standaardwaarden herstellen</button></div>
+    <textarea class="sumbox" id="summ" aria-label="Samenvatting" hidden></textarea>
+    <div class="bench" id="bench" hidden aria-live="polite"></div>
+  </section>
+</div>
+</main>
+<script>
+const KEYS=['brons','zilver','goud'],NAME={brons:'Brons',zilver:'Zilver',goud:'Goud'};
+const PR=['P1 Kritiek','P2 Hoog','P3 Normaal','P4 Laag'],PK=['p1','p2','p3','p4'];
+const kd=()=>({
+ brons:{avail:99,resp:'2,5 werkdagen',res:{p1:'8 uur',p2:'2 werkdagen',p3:'5 werkdagen',p4:'10 werkdagen'},rpo:'24 uur',rto:'8 uur'},
+ zilver:{avail:99.5,resp:'1,5 werkdag',res:{p1:'4 uur',p2:'1 werkdag',p3:'3 werkdagen',p4:'5 werkdagen'},rpo:'12 uur',rto:'4 uur'},
+ goud:{avail:99.9,resp:'8 werkuur',res:{p1:'2 uur',p2:'8 uur',p3:'2 werkdagen',p4:'3 werkdagen'},rpo:'1 uur',rto:'2 uur'}});
+const mk=(r,m)=>({rate:{eng:r[0],dm:r[1]},
+ cost:{hosting:150,licenties:100},
+ hrs:{onderhoud:3,support:2,dm:1},
+ tiers:{brons:{f:100,rev:1,rep:1},zilver:{f:125,rev:1,rep:2},goud:{f:160,rev:4,rep:4}},
+ kpi:kd(),revH:4,repH:2,buffer:10,marge:m});
+const fresh=()=>({seg:'extern',intern:mk([85,95],0),extern:mk([110,120],10)});
+let S=fresh(),tab='fin',lvl='brons',det=false;
+try{const x=localStorage.getItem('sla-v3');if(x)S=JSON.parse(x)}catch(e){}
+['intern','extern'].forEach(g=>{
+ if(!S[g]||!S[g].hrs)S[g]=fresh()[g];
+ const h=S[g].hrs;
+ if(h.support===undefined){h.onderhoud=(h.onderhoud||0)+(h.monitoring||0);h.support=2;delete h.monitoring;delete h.backups}
+ if(!S[g].kpi)S[g].kpi=kd();
+ const d=kd();KEYS.forEach(k=>{if(typeof S[g].kpi[k].resp!=='string')S[g].kpi[k].resp=d[k].resp})});
+const syncFrom=g=>{const o=g==='intern'?'extern':'intern',rate=S[o].rate;S[o]=JSON.parse(JSON.stringify(S[g]));S[o].rate=rate};
+syncFrom(S.seg);
+const save=()=>{try{localStorage.setItem('sla-v3',JSON.stringify(S))}catch(e){}};
+const eur=n=>new Intl.NumberFormat('nl-NL',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n);
+const hr=n=>n.toFixed(1).replace('.',',')+' u';
+const fa=n=>String(n).replace('.',',')+'%';
+const esc=v=>String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const get=(o,p)=>p.split('.').reduce((a,k)=>a[k],o);
+const set=(o,p,v)=>{const k=p.split('.');const l=k.pop();k.reduce((a,x)=>a[x],o)[l]=v};
+const cur=()=>S[S.seg];
+const F=(p,l,u,ty='number')=>`<div class="f"><label for="${p}">${l}</label><div class="in"><input type="${ty}" id="${p}" data-p="${p}" ${ty==='number'?'min="0" step="any" ':''}value="${esc(get(cur(),p))}"><span>${u||''}</span></div></div>`;
+function build(){
+ bi.setAttribute('aria-pressed',S.seg==='intern');
+ be.setAttribute('aria-pressed',S.seg==='extern');
+ tf.setAttribute('aria-pressed',tab==='fin');
+ tk.setAttribute('aria-pressed',tab==='kpi');
+ if(tab==='fin'){inputs.innerHTML=`
+ <h2>Uurtarieven</h2>
+ ${F('rate.eng','Engineer','€/u')}${F('rate.dm','Service Delivery Manager','€/u')}
+ <p>Alleen de uurtarieven verschillen tussen intern en extern. Alle andere waarden gelden voor beide.</p>
+ <h2>Vaste kosten</h2>
+ ${F('cost.hosting','Hosting','€')}${F('cost.licenties','Licenties','€')}
+ <h2>Uren reservering</h2>
+ ${F('hrs.onderhoud','Onderhoud en monitoring','u')}${F('hrs.support','Ondersteuning','u')}${F('hrs.dm','Service Delivery Manager','u')}
+ <h2>Schaling uren per niveau</h2>
+ ${F('tiers.brons.f','Brons','%')}${F('tiers.zilver.f','Zilver','%')}${F('tiers.goud.f','Goud','%')}
+ <h2>Opslagen</h2>
+ ${F('buffer','Risicobuffer op uren','%')}${F('marge','Extra marge','%')}`}
+ else{const P=`kpi.${lvl}.`;inputs.innerHTML=`
+ <div class="seg fw" role="group" aria-label="Niveau">${KEYS.map(k=>`<button data-lvl="${k}" aria-pressed="${k===lvl}">${NAME[k]}</button>`).join('')}</div>
+ <h2>Beschikbaarheid</h2>
+ ${F(P+'avail','Uptime','%')}
+ <p>Het servicevenster is altijd kantooruren.</p>
+ <h2>Reactietijd</h2>
+ ${F(P+'resp','Alle meldingen','','text')}
+ <h2>Oplostijd per prioriteit</h2>
+ ${PK.map((p,i)=>F(P+'res.'+p,PR[i],'','text')).join('')}
+ <h2>Herstel</h2>
+ ${F(P+'rpo','RPO','','text')}${F(P+'rto','RTO','','text')}
+ <h2>Reviews en rapportages</h2>
+ ${F(`tiers.${lvl}.rev`,'Reviews per jaar','x')}${F(`tiers.${lvl}.rep`,'Rapportages per jaar','x')}
+ ${F('revH','SDM-uren per review','u')}${F('repH','SDM-uren per rapportage','u')}
+ <p>De SDM-uren gelden voor alle niveaus. Reviews en rapportages worden automatisch in de prijs meegerekend.</p>`}
+}
+function calc(){
+ const c=cur(),r=c.rate,h=c.hrs,q=Math.round;
+ const pro=k=>{const t=c.tiers[k],f=t.f/100;
+  const rh=(t.rev*c.revH+t.rep*c.repH)/12;
+  const oh=h.onderhoud*f,sh=h.support*f,dh=h.dm*f+rh;
+  const ov=q(oh*r.eng),sv=q(sh*r.eng),dv=q(dh*r.dm);
+  const host=q(c.cost.hosting),lic=q(c.cost.licenties);
+  const buf=q((ov+sv+dv)*c.buffer/100);
+  const sub=ov+sv+dv+buf+host+lic;
+  const mg=q(sub*c.marge/100);
+  return{oh,sh,dh,rh,ov,sv,dv,host,lic,buf,mg,hours:oh+sh+dh,net:sub+mg}};
+ return{brons:pro('brons'),zilver:pro('zilver'),goud:pro('goud')};
+}
+function summary(){
+ const R=calc(),c=cur();
+ let t=`SLA-voorstel (${S.seg})\nAlle bedragen zijn exclusief btw.\n`;
+ KEYS.forEach(k=>{const v=R[k],kp=c.kpi[k],tr=c.tiers[k];
+  t+=`\nPro ${NAME[k]}\nPrijs: ${eur(v.net)} per maand (${eur(v.net*12)} per jaar)\n`;
+  t+=`Inbegrepen: onderhoud en monitoring, ondersteuning, hosting en licenties, met ${hr(v.hours)} gereserveerde capaciteit per maand (inclusief service delivery management)\n`;
+  t+=`Service levels:\n- Beschikbaarheid: ${fa(kp.avail)}\n- Servicevenster: kantooruren\n`;
+  t+=`- Reactietijd: ${kp.resp} (alle meldingen)\n`;
+  t+=`- Oplostijd: ${PK.map((p,i)=>`${PR[i]} ${kp.res[p]}`).join(', ')}\n`;
+  t+=`- RPO: ${kp.rpo}, RTO: ${kp.rto}\n`;
+  t+=`- Reviews: ${tr.rev} per jaar, rapportages: ${tr.rep} per jaar\n`;});
+ return t.trim();
+}
+const BENCH={
+ avail:{brons:[99,99.5],zilver:[99.5,99.9],goud:[99.9,99.95]},
+ res1:{brons:[8,24],zilver:[4,8],goud:[2,4]},
+ rto:{brons:[8,24],zilver:[4,8],goud:[1,4]},
+ rpo:{brons:[12,24],zilver:[4,12],goud:[1,4]},
+ rev:{brons:[1,2],zilver:[1,2],goud:[2,4]},
+ rep:{brons:[1,4],zilver:[2,4],goud:[4,12]},
+ f:{zilver:[125,150],goud:[175,250]},
+ ratio:{zilver:[1.3,1.5],goud:[1.8,2.2]},
+ rate:{extern:{eng:[90,135],dm:[100,150]},intern:{eng:[65,100],dm:[75,110]}},
+ marge:{extern:[10,25],intern:[0,10]},buffer:[5,15]};
+const fm=n=>String(+(+n).toFixed(2)).replace('.',',');
+const rg=a=>`${fm(a[0])}\u2013${fm(a[1])}`;
+const toH=v=>{const m=String(v).replace(',','.').match(/([\d.]+)\s*(min|werkuur|uur|werkdag|dag)/i);if(!m)return null;const n=parseFloat(m[1]),u=m[2].toLowerCase();return u==='min'?n/60:(u==='uur'||u==='werkuur')?n:u==='werkdag'?n*8:n*24};
+function drawBench(){
+ const c=cur(),R=calc(),B=BENCH,sg=S.seg;let ok=0,tot=0;
+ const test=(v,r)=>(v==null||isNaN(v))?'na':v<r[0]?'lo':v>r[1]?'hi':'ok';
+ const row=(l,vt,bt,s,kind)=>{if(s!=='na'){tot++;if(s==='ok')ok++}
+  const lab={ok:'\u2713 binnen',lo:kind==='t'?'\u25BC sneller':'\u25BC lager',hi:kind==='t'?'\u25B2 trager':'\u25B2 hoger',na:'niet te toetsen'}[s];
+  return `<div class="br"><span>${l}</span><span>${esc(vt)}</span><span class="mu">${bt}</span><span class="st ${s}">${lab}</span></div>`};
+ let h='';
+ KEYS.forEach(k=>{const kp=c.kpi[k],t=c.tiers[k];
+  h+=`<div class="bh" style="color:var(--${k}-t)">Pro ${NAME[k]}</div>`;
+  h+=row('Beschikbaarheid',fa(kp.avail),rg(B.avail[k])+'%',test(kp.avail,B.avail[k]));
+  h+=row('Oplostijd P1',kp.res.p1,rg(B.res1[k])+' u',test(toH(kp.res.p1),B.res1[k]),'t');
+  h+=row('RTO',kp.rto,rg(B.rto[k])+' u',test(toH(kp.rto),B.rto[k]),'t');
+  h+=row('RPO',kp.rpo,rg(B.rpo[k])+' u',test(toH(kp.rpo),B.rpo[k]),'t');
+  h+=row('Reviews per jaar',t.rev,rg(B.rev[k]),test(t.rev,B.rev[k]));
+  h+=row('Rapportages per jaar',t.rep,rg(B.rep[k]),test(t.rep,B.rep[k]));
+  if(B.f[k])h+=row('Schaling uren',t.f+'%',rg(B.f[k])+'%',test(t.f,B.f[k]));});
+ h+='<div class="bh">Tarieven, opslagen en prijsverhouding</div>';
+ h+=row('Engineer',eur(c.rate.eng)+'/u',rg(B.rate[sg].eng)+' \u20AC/u',test(c.rate.eng,B.rate[sg].eng));
+ h+=row('Service Delivery Manager',eur(c.rate.dm)+'/u',rg(B.rate[sg].dm)+' \u20AC/u',test(c.rate.dm,B.rate[sg].dm));
+ h+=row('Extra marge',c.marge+'%',rg(B.marge[sg])+'%',test(c.marge,B.marge[sg]));
+ h+=row('Risicobuffer',c.buffer+'%',rg(B.buffer)+'%',test(c.buffer,B.buffer));
+ ['zilver','goud'].forEach(k=>{const r=R[k].net/R.brons.net;h+=row(`Prijs ${NAME[k]} ten opzichte van Brons`,'\u00D7'+fm(r),'\u00D7'+rg(B.ratio[k]),test(r,B.ratio[k]))});
+ const lrow=(l,vals,txt,dir)=>{let s='na';if(vals.every(v=>v!=null&&!isNaN(v))){const up=vals[0]<vals[1]&&vals[1]<vals[2],dn=vals[0]>vals[1]&&vals[1]>vals[2];s=(dir==='up'?up:dn)?'ok':'hi'}
+  const lab={ok:'\u2713 klopt',hi:'\u25B2 let op',na:'niet te toetsen'}[s];
+  return `<div class="br"><span>${l}</span><span>${esc(txt.join(' \u2192 '))}</span><span class="mu">${dir==='up'?'moet oplopen':'moet aflopen'}</span><span class="st ${s}">${lab}</span></div>`};
+ const kk=f=>KEYS.map(k=>f(c.kpi[k]));
+ h+='<div class="bh">Opbouw tussen de niveaus</div>';
+ h+=lrow('Beschikbaarheid',kk(x=>x.avail),kk(x=>fa(x.avail)),'up');
+ h+=lrow('Reactietijd',kk(x=>toH(x.resp)),kk(x=>x.resp),'down');
+ h+=lrow('Oplostijd P1',kk(x=>toH(x.res.p1)),kk(x=>x.res.p1),'down');
+ h+=lrow('RTO',kk(x=>toH(x.rto)),kk(x=>x.rto),'down');
+ h+=lrow('RPO',kk(x=>toH(x.rpo)),kk(x=>x.rpo),'down');
+ h+=lrow('Maandprijs',KEYS.map(k=>R[k].net),KEYS.map(k=>eur(R[k].net)),'up');
+ bench.innerHTML=`<p class="sm">${ok} van ${tot} toetsbare waarden liggen binnen de benchmark (${sg}).</p><div class="br hd"><span>Onderdeel</span><span>Jouw waarde</span><span>Benchmark</span><span class="st">Status</span></div>${h}<p class="bf">Indicatieve richtwaarden voor managed services op kantooruren in West-Europa. Er bestaat geen gepubliceerde wereldwijde dataset voor deze combinatie. De bereiken zijn gebaseerd op openbare SLA-aanbiedingen (zoals 99 / 99,5 / 99,9% uptime en P1-tijden per niveau) en gangbare praktijk. De reactietijd is niet tegen de markt getoetst omdat die bij jou voor alle meldingen geldt, terwijl marktcijfers over P1 gaan.</p>`;
+}
+function render(){
+ const R=calc(),c=cur();window._R=R;
+ const ln=(a,u,b,cls='')=>`<div class="ln ${cls}"><span>${a}</span><span class="u">${u}</span><span>${b}</span></div>`;
+ const kv=(a,b)=>`<div class="ln kv"><span>${a}</span><span>${esc(b)}</span></div>`;
+ cards.innerHTML=KEYS.map(k=>{const v=R[k],kp=c.kpi[k],t=c.tiers[k];
+  let d='<div class="ph">Prijsopbouw</div><div class="g">Uren</div>'+ln('Onderhoud en monitoring',hr(v.oh),eur(v.ov))+ln('Ondersteuning',hr(v.sh),eur(v.sv))+ln('Service Delivery Manager',hr(v.dh),eur(v.dv))+ln('waarvan reviews en rapportages',hr(v.rh),'','sub');
+  d+='<div class="g">Vaste kosten</div>'+ln('Hosting','',eur(v.host))+ln('Licenties','',eur(v.lic));
+  if(c.buffer||c.marge){d+='<div class="g">Opslagen</div>';
+   if(c.buffer)d+=ln(`Risicobuffer ${c.buffer}%`,'',eur(v.buf));
+   if(c.marge)d+=ln(`Extra marge ${c.marge}%`,'',eur(v.mg));}
+  d+=ln('Totaal per maand',hr(v.hours),eur(v.net),'sum');
+  if(!det)d='';
+  d+='<div class="sl"><div class="ph">Service levels</div>'+kv('Beschikbaarheid',fa(kp.avail))+kv('Servicevenster','Kantooruren')+kv('Reactietijd (alle meldingen)',kp.resp);
+  d+='<div class="ln kv hd"><span>Oplostijd per prioriteit</span><span></span></div>'+PK.map((p,i)=>kv(PR[i],kp.res[p])).join('');
+  d+=kv('RPO',kp.rpo)+kv('RTO',kp.rto)+kv('Reviews per jaar',t.rev)+kv('Rapportages per jaar',t.rep)+'</div>';
+  return `<article class="card" style="--c:var(--${k});--ct:var(--${k}-t)"><h3>Pro ${NAME[k]}</h3><div class="price">${eur(v.net)} <small>/ maand</small></div><div class="yr">${eur(v.net*12)} per jaar</div><div class="dl">${k==='brons'?'Instapniveau':`+${eur(v.net-R.brons.net)} (+${Math.round((v.net/R.brons.net-1)*100)}%) t.o.v. Brons`}</div>${d}</article>`}).join('');
+ if(!bench.hidden)drawBench();
+ note.textContent='Prijs = uren × tarief + risicobuffer + hosting en licenties, daarna extra marge als opslag op dat totaal. Alle bedragen excl. btw en afgerond op hele euro\u2019s per regel.';
+ if(!summ.hidden){summ.value=summary();summ.rows=summ.value.split('\n').length+1}
+}
+inputs.addEventListener('input',e=>{
+ const t=e.target;
+ if(t.dataset.p){const p=t.dataset.p,n=parseFloat(t.value),v=t.type==='number'?(isNaN(n)||n<0?0:n):t.value;(p.startsWith('rate.')?[cur()]:[S.intern,S.extern]).forEach(o=>set(o,p,v))}
+ save();render();
+});
+inputs.addEventListener('focusin',e=>{if(e.target.tagName==='INPUT')e.target.select()});
+inputs.addEventListener('click',e=>{const b=e.target.closest('[data-lvl]');if(b){lvl=b.dataset.lvl;build()}});
+bi.onclick=()=>{S.seg='intern';save();build();render()};
+be.onclick=()=>{S.seg='extern';save();build();render()};
+tf.onclick=()=>{tab='fin';build()};
+tk.onclick=()=>{tab='kpi';build()};
+reset.onclick=()=>{S[S.seg]=fresh()[S.seg];syncFrom(S.seg);save();build();render()};
+copy.onclick=async e=>{
+ const t=summary();summ.value=t;summ.rows=t.split('\n').length+1;summ.hidden=false;
+ try{await navigator.clipboard.writeText(t);e.target.textContent='Gekopieerd'}catch(x){summ.select();e.target.textContent='Selecteer en kopieer hieronder'}
+ setTimeout(()=>e.target.textContent='Maak samenvatting',2000);
+};
+dt.onclick=()=>{det=!det;dt.textContent=det?'Verberg details':'Toon details';dt.setAttribute('aria-pressed',det);render()};
+bm.onclick=()=>{bench.hidden=!bench.hidden;if(!bench.hidden)drawBench();bm.textContent=bench.hidden?'Toets aan benchmark':'Verberg benchmark'};
+build();render();
+</script>
+</body>
+</html>
